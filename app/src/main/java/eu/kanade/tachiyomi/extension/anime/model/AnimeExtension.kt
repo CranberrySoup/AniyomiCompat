@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
+import eu.kanade.tachiyomi.animesource.model.toEpisodeList
 import java.net.URI
 
 
@@ -107,8 +108,8 @@ sealed class AnimeExtension {
                             tags = details.getGenres()
                             plot = details.description
                             episodes = mutableMapOf(
-                                DubStatus.None to source.getEpisodeList(sAnime)
-                                    .map { it.toEpisode() }.sortedBy { it.episode })
+                                DubStatus.None to source.getEpisodeList(sAnime).toEpisodeList()
+                            )
                         }
                     }
 
