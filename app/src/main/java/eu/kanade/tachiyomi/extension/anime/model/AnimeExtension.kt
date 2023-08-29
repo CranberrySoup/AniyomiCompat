@@ -14,6 +14,7 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.mvvm.normalSafeApiCall
+import com.lagradost.cloudstream3.mvvm.suspendSafeApiCall
 import com.lagradost.cloudstream3.newAnimeLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.getQualityFromName
@@ -24,6 +25,7 @@ import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.toEpisodeList
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import java.net.URI
 
 
@@ -59,9 +61,9 @@ sealed class AnimeExtension {
             val sources = sources.filterIsInstance<AnimeCatalogueSource>()
             return sources.map { source ->
                 object : MainAPI() {
-                    override var lang = source.lang
+                    override var lang = if (source.lang == "all") "uni" else source.lang
                     override var name =
-                        source.name + if (sources.size > 1) " (${source.lang.capitalize()})" else ""
+                        source.name + (if (sources.size > 1) " (${source.lang.capitalize()})" else "") + " ⦁"
                     override val supportedTypes = super.supportedTypes.toMutableSet().apply {
                         if (isNsfw) add(TvType.NSFW)
                     }
@@ -102,13 +104,17 @@ sealed class AnimeExtension {
                     override suspend fun load(url: String): LoadResponse? {
                         val sAnime = SAnime.fromData(url) ?: return null
                         val details = source.getAnimeDetails(sAnime)
+                        val title = normalSafeApiCall { details.title } ?: ""
+                        val episodes = suspendSafeApiCall {
+                            source.getEpisodeList(sAnime).toEpisodeList()
+                        } ?: emptyList()
 
-                        return newAnimeLoadResponse(details.title, url, TvType.Anime) {
-                            posterUrl = details.thumbnail_url
-                            tags = details.getGenres()
-                            plot = details.description
-                            episodes = mutableMapOf(
-                                DubStatus.None to source.getEpisodeList(sAnime).toEpisodeList()
+                        return newAnimeLoadResponse(title, url, TvType.Anime) {
+                            this.posterUrl = details.thumbnail_url
+                            this.tags = details.getGenres()
+                            this.plot = details.description
+                            this.episodes = mutableMapOf(
+                                DubStatus.None to episodes
                             )
                         }
                     }
@@ -127,19 +133,28 @@ sealed class AnimeExtension {
                                 qualityRegex.find(video.quality)?.groupValues?.getOrNull(1)
                             val quality = getQualityFromName(qualityString)
                             val videoName = video.quality.replace(qualityString ?: "", "")
+                            val headers = video.headers?.toMultimap()
+                                ?.mapValues { it.value.firstOrNull() ?: "" }
+                                ?.toMutableMap()
+                                ?: (source as? AnimeHttpSource)?.headers?.toMultimap()
+                                    ?.mapValues { it.value.firstOrNull() ?: "" }
+                                    ?.toMutableMap() ?: emptyMap()
+
+                            val videoUrl = video.videoUrl ?: video.url
+
                             callback.invoke(
                                 ExtractorLink(
                                     this.name,
                                     this.name + " " + videoName.trim(),
-                                    video.url,
+                                    videoUrl,
                                     "",
                                     quality,
                                     // java.net.URISyntaxException needs to be properly addressed
-                                    isM3u8 = normalSafeApiCall {
-                                        URI(video.url).path?.substringAfterLast(".")
+                                    isM3u8 = runCatching {
+                                        URI(videoUrl).path?.substringAfterLast(".")
                                             ?.contains("m3u")
-                                    } == true,
-                                    headers = video.headers?.toMap() ?: emptyMap()
+                                    }.getOrNull() == true,
+                                    headers = headers
                                 )
                             )
                             video.subtitleTracks.forEach { subtitle ->
@@ -151,7 +166,6 @@ sealed class AnimeExtension {
                         return true
                     }
                 }
-
             }
         }
     }
