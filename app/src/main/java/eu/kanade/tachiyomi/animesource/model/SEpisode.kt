@@ -6,13 +6,12 @@ import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import java.io.Serializable
 
 fun List<SEpisode>.toEpisodeList(): List<Episode> {
-    // Episode number is completely arbitrary and everything is based on titles.
-    return this.sortedBy { it.episode_number }.mapIndexed { i, episode ->
+    return this.sortedBy { it.episode_number }.map { episode ->
         Episode(
             data = episode.toJson(),
             name = episode.name,
             date = episode.date_upload,
-            episode = i,
+            episode = null,
         )
     }
 }
