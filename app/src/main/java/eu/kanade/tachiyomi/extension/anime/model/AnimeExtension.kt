@@ -13,7 +13,6 @@ import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
-import com.lagradost.cloudstream3.mvvm.normalSafeApiCall
 import com.lagradost.cloudstream3.mvvm.suspendSafeApiCall
 import com.lagradost.cloudstream3.newAnimeLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
@@ -26,6 +25,9 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.toEpisodeList
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.network.NetworkHelper
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.net.URI
 
 
@@ -84,11 +86,13 @@ sealed class AnimeExtension {
                         page: Int,
                         request: MainPageRequest
                     ): HomePageResponse? {
-                        val data = when (request.data) {
-                            popular.data -> normalSafeApiCall { source.fetchPopularAnime(page) }
-                            latest.data -> normalSafeApiCall { source.fetchLatestUpdates(page) }
-                            else -> null
-                        }?.awaitSingle() ?: return null
+                        val data = runCatching {
+                            when (request.data) {
+                                popular.data -> source.fetchPopularAnime(page)
+                                latest.data -> source.fetchLatestUpdates(page)
+                                else -> null
+                            }?.awaitSingle()
+                        }.getOrNull() ?: return null
 
                         return HomePageResponse(
                             listOf(
@@ -104,7 +108,7 @@ sealed class AnimeExtension {
                     override suspend fun load(url: String): LoadResponse? {
                         val sAnime = SAnime.fromData(url) ?: return null
                         val details = source.getAnimeDetails(sAnime)
-                        val title = normalSafeApiCall { details.title } ?: ""
+                        val title = runCatching { details.title }.getOrElse { "" }
                         val episodes = suspendSafeApiCall {
                             source.getEpisodeList(sAnime).toEpisodeList()
                         } ?: emptyList()
@@ -133,12 +137,20 @@ sealed class AnimeExtension {
                                 qualityRegex.find(video.quality)?.groupValues?.getOrNull(1)
                             val quality = getQualityFromName(qualityString)
                             val videoName = video.quality.replace(qualityString ?: "", "")
-                            val headers = video.headers?.toMultimap()
+                            val headers = (video.headers?.toMultimap()
                                 ?.mapValues { it.value.firstOrNull() ?: "" }
                                 ?.toMutableMap()
                                 ?: (source as? AnimeHttpSource)?.headers?.toMultimap()
                                     ?.mapValues { it.value.firstOrNull() ?: "" }
-                                    ?.toMutableMap() ?: emptyMap()
+                                    ?.toMutableMap() ?: mutableMapOf()).apply {
+
+                                // Set the appropriate user agent forcefully.
+                                this.keys.filter { key ->
+                                    key.equals("user-agent", ignoreCase = true)
+                                }.forEach { key ->
+                                    this[key] = Injekt.get<NetworkHelper>().defaultUserAgent
+                                }
+                            }
 
                             val videoUrl = video.videoUrl ?: video.url
 
