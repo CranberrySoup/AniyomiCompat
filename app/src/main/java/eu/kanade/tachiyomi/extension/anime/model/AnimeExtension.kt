@@ -108,13 +108,13 @@ sealed class AnimeExtension {
                     override suspend fun load(url: String): LoadResponse? {
                         val sAnime = SAnime.fromData(url) ?: return null
                         val details = source.getAnimeDetails(sAnime)
-                        val title = runCatching { details.title }.getOrElse { "" }
+                        val title = runCatching { details.title }.getOrNull() ?: sAnime.title
                         val episodes = suspendSafeApiCall {
                             source.getEpisodeList(sAnime).toEpisodeList()
                         } ?: emptyList()
 
                         return newAnimeLoadResponse(title, url, TvType.Anime) {
-                            this.posterUrl = details.thumbnail_url
+                            this.posterUrl = details.thumbnail_url ?: sAnime.thumbnail_url
                             this.tags = details.getGenres()
                             this.plot = details.description
                             this.episodes = mutableMapOf(
@@ -132,11 +132,12 @@ sealed class AnimeExtension {
                         val sEpisode = SEpisode.fromData(data) ?: return false
 
                         source.getVideoList(sEpisode).forEach { video ->
-                            val qualityRegex = Regex("""[\s^](\d+p)[\s$]""")
-                            val qualityString =
-                                qualityRegex.find(video.quality)?.groupValues?.getOrNull(1)
+                            val qualityRegex = Regex("""[\s:](\d+p)\s*$""")
+                            val groups = qualityRegex.find(video.quality)?.groupValues
+                            val qualityString = groups?.getOrNull(1)
+                            val wholeString = groups?.getOrNull(0)
                             val quality = getQualityFromName(qualityString)
-                            val videoName = video.quality.replace(qualityString ?: "", "")
+                            val videoName = video.quality.replace(wholeString ?: "", "")
                             val headers = (video.headers?.toMultimap()
                                 ?.mapValues { it.value.firstOrNull() ?: "" }
                                 ?.toMutableMap()
@@ -156,8 +157,8 @@ sealed class AnimeExtension {
 
                             callback.invoke(
                                 ExtractorLink(
-                                    this.name,
-                                    this.name + " " + videoName.trim(),
+                                    videoName.trim(),
+                                    videoName.trim(),
                                     videoUrl,
                                     "",
                                     quality,

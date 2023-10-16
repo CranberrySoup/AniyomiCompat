@@ -1,12 +1,28 @@
 package eu.kanade.tachiyomi.animesource.model
 
+import com.lagradost.aniyomicompat.AniyomiPlugin
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import java.io.Serializable
 
+
+enum class EpisodeSortMethods(val num: Int) {
+    None(0),
+    Ascending(1),
+    Reverse(2),
+}
+
+fun sortEpisodes(sortMethod: Int, episodes: List<SEpisode>): List<SEpisode> {
+    return when (sortMethod) {
+        EpisodeSortMethods.Reverse.num -> episodes.reversed()
+        EpisodeSortMethods.Ascending.num -> episodes.sortedBy { it.episode_number }
+        else -> episodes
+    }
+}
+
 fun List<SEpisode>.toEpisodeList(): List<Episode> {
-    return this.sortedBy { it.episode_number }.map { episode ->
+    return sortEpisodes(AniyomiPlugin.aniyomiSortingMethod, this).map { episode ->
         Episode(
             data = episode.toJson(),
             name = episode.name,
