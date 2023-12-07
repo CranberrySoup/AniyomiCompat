@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.extension.anime.model
 
 import android.graphics.drawable.Drawable
+import androidx.preference.PreferenceScreen
 import com.lagradost.awaitSingle
 import com.lagradost.cloudstream3.APIHolder.capitalize
 import com.lagradost.cloudstream3.DubStatus
@@ -20,6 +21,7 @@ import com.lagradost.cloudstream3.utils.getQualityFromName
 import eu.kanade.domain.source.anime.model.AnimeSourceData
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.animesource.AnimeSource
+import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
@@ -75,6 +77,14 @@ sealed class AnimeExtension {
                             .awaitSingle().animes.map {
                                 it.toSearchResponse(this.name)
                             }
+                    }
+
+                    fun canShowPreferenceScreen(): Boolean = source is ConfigurableAnimeSource
+                    fun getPkgName(): String = pkgName
+                    fun showPreferenceScreen(screen: PreferenceScreen) {
+                        if (source is ConfigurableAnimeSource) {
+                            source.setupPreferenceScreen(screen)
+                        }
                     }
 
                     val popular = MainPageData("Popular", "1")

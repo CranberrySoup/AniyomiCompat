@@ -12,7 +12,7 @@ buildscript {
         classpath("com.android.tools.build:gradle:7.3.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20")
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.5.0")
-        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
+        classpath("com.github.recloudstream:gradle:-SNAPSHOT")
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle.kts files
