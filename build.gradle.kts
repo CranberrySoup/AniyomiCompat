@@ -26,31 +26,3 @@ allprojects {
         maven("https://jitpack.io")
     }
 }
-
-//buildscript {
-//    repositories {
-//        google()
-//        mavenCentral()
-//        // Shitpack repo which contains our tools and dependencies
-//        maven("https://jitpack.io")
-//    }
-//
-//    dependencies {
-//        classpath("com.android.tools.build:gradle:7.0.4")
-//        // Cloudstream gradle plugin which makes everything work and builds plugins
-//        classpath("com.github.recloudstream:gradle:master-SNAPSHOT")
-//        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
-//    }
-//}
-//allprojects {
-//    apply(plugin = "com.android.application")
-//    apply(plugin = "kotlin-android")
-//    apply(plugin = "com.lagradost.cloudstream3.gradle")
-//}
-//plugins {
-//    id 'com.android.application' version '8.0.1' apply false
-//    id 'com.android.library' version '8.0.1' apply false
-//    id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
-//}
-
-

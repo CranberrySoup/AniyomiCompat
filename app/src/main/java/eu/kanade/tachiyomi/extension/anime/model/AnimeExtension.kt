@@ -73,7 +73,7 @@ sealed class AnimeExtension {
                     }
 
                     override suspend fun search(query: String): List<SearchResponse> {
-                        return source.fetchSearchAnime(1, query, AnimeFilterList())
+                        return source.fetchSearchAnime(1, query, source.getFilterList())
                             .awaitSingle().animes.map {
                                 it.toSearchResponse(this.name)
                             }
