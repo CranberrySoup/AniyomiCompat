@@ -53,7 +53,7 @@ class AnimeExtensionLoader() {
     private  val METADATA_HAS_README = "tachiyomi.animeextension.hasReadme"
     private  val METADATA_HAS_CHANGELOG = "tachiyomi.animeextension.hasChangelog"
      val LIB_VERSION_MIN = 12
-     val LIB_VERSION_MAX = 14
+     val LIB_VERSION_MAX = 15
 
     private  val PACKAGE_FLAGS =
         PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNATURES
@@ -156,8 +156,8 @@ class AnimeExtensionLoader() {
         }
 
         // Validate lib version
-        val libVersion = versionName.substringBeforeLast('.').toDouble()
-        if (libVersion < LIB_VERSION_MIN || libVersion > LIB_VERSION_MAX) {
+        val libVersion = versionName.substringBeforeLast('.').toDoubleOrNull()
+        if (libVersion == null || libVersion < LIB_VERSION_MIN || libVersion > LIB_VERSION_MAX) {
             logcat {
                 "Lib version is $libVersion, while only versions " +
                         "$LIB_VERSION_MIN to $LIB_VERSION_MAX are allowed"
