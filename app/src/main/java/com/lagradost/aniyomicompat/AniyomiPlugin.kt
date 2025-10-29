@@ -32,6 +32,8 @@ import com.lagradost.cloudstream3.utils.INFER_TYPE
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
+import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
+import eu.kanade.tachiyomi.animesource.PreferenceScreen
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SAnimeImpl
 import eu.kanade.tachiyomi.animesource.model.SEpisode
@@ -122,6 +124,14 @@ private fun AnimeExtension.Installed.getMainApis(): List<MainAPI> {
                 source.name + (if (sources.size > 1) " (${source.lang.capitalize()})" else "") + " ⦁"
             override val supportedTypes = super.supportedTypes.toMutableSet().apply {
                 if (isNsfw) add(TvType.NSFW)
+            }
+
+            fun canShowPreferenceScreen(): Boolean = source is ConfigurableAnimeSource
+            fun getPkgName(): String = pkgName
+            fun showPreferenceScreen(screen: PreferenceScreen) {
+                if (source is ConfigurableAnimeSource) {
+                    source.setupPreferenceScreen(screen)
+                }
             }
 
             override suspend fun search(query: String, page: Int): SearchResponseList {
