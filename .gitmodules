@@ -1,0 +1,3 @@
+[submodule "aniyomi"]
+	path = aniyomi
+	url = https://github.com/aniyomiorg/aniyomi
