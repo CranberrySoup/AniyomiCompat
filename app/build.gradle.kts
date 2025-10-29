@@ -74,7 +74,8 @@ val patchFile = tasks.register("patchSourceFile") {
 
 val subdir = "aniyomi"
 
-tasks.named("build") {
+tasks.named("preBuild") {
+    dependsOn(patchFile)
     dependsOn(gradle.includedBuild(subdir).task(":app:build"))
 }
 
