@@ -46,7 +46,7 @@ jobs:
         cd $GITHUB_WORKSPACE/src
         chmod +x gradlew
         ./gradlew patchSourceFile
-        ./gradlew assembleDebug --warning-mode none
+        ./gradlew assembleDebug --quiet
         cp **/build/outputs/apk/debug/* $GITHUB_WORKSPACE/builds
 
     - name: Push builds
