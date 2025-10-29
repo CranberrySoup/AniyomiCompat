@@ -19,6 +19,7 @@ jobs:
       uses: actions/checkout@master
       with:
         path: "src"
+        submodules: true
 
     - name: Checkout builds
       uses: actions/checkout@master
