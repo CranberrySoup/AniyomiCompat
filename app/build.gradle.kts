@@ -39,6 +39,7 @@ android {
 
     buildFeatures {
         compose = false
+        buildConfig = true
     }
 
     composeOptions {
