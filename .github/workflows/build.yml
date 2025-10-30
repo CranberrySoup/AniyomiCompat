@@ -44,6 +44,7 @@ jobs:
       uses: android-actions/setup-android@v3
 
     - name: Build APK
+      if: always()
       run: |
         cd $GITHUB_WORKSPACE/src
         chmod +x gradlew
