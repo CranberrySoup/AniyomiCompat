@@ -58,17 +58,39 @@ android {
 
 val patchFile = tasks.register("patchSourceFile") {
     doFirst {
-        val sourceFile = file("./../$subdir/core/common/src/main/java/tachiyomi/core/common/i18n/Localize.kt")
+        run {
+            val sourceFile =
+                file("./../$subdir/core/common/src/main/java/tachiyomi/core/common/i18n/Localize.kt")
 
-        val content = sourceFile.readText()
-        if (content.contains("resource.resourceId.toString()")) return@doFirst
+            val content = sourceFile.readText()
+            if (content.contains("resource.resourceId.toString()")) return@run
 
-        // Resource strings do not work properly in extensions, use the id as opposed to resolving the string
-        val patchedContent = content.replace("return StringDesc.", "return resource.resourceId.toString() // StringDesc.")
+            // Resource strings do not work properly in extensions, use the id as opposed to resolving the string
+            val patchedContent = content.replace(
+                "return StringDesc.",
+                "return resource.resourceId.toString() // StringDesc."
+            )
 
-        sourceFile.writeText(patchedContent)
+            sourceFile.writeText(patchedContent)
 
-        println("Source file patched!")
+            println("Source file patched!")
+        }
+        run {
+            val sourceFile = file("./../$subdir/gradle/androidx.versions.toml")
+
+            val content = sourceFile.readText()
+            if (content.contains("""agp_version = "8.13.0"""")) return@run
+
+            // Minify does not seem to work properly with 8.9.0
+            val patchedContent = content.replace(
+                """agp_version = "8.9.0"""",
+                """agp_version = "8.13.0""""
+            )
+
+            sourceFile.writeText(patchedContent)
+
+            println("Gradle version file patched!")
+        }
     }
 }
 
