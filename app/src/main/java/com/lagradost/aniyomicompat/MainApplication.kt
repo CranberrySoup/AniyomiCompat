@@ -23,8 +23,8 @@ class CustomAppModule(val app: Application) : InjektModule {
 
         patchInjekt()
         Injekt.importModule(PreferenceModule(app))
-        Injekt.importModule(AppModule(app))
         Injekt.importModule(DomainModule())
+        Injekt.importModule(AppModule(app))
         Injekt.importModule(SYDomainModule())
 
         addSingleton(app)
